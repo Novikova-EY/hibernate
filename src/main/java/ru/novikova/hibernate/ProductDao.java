@@ -3,6 +3,7 @@ package ru.novikova.hibernate;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.util.List;
+import java.util.Optional;
 
 public class ProductDao {
     private EntityManagerFactory factory;
@@ -13,48 +14,67 @@ public class ProductDao {
 
     public void insert(Product product) {
         EntityManager em = factory.createEntityManager();
-        em.getTransaction().begin();
-        em.persist(product);
-        em.getTransaction().commit();
-        em.close();
+        try {
+            em.getTransaction().begin();
+            em.persist(product);
+            em.getTransaction().commit();
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
 
-    public Product findById(Long id) {
+    public Optional<Product> findById(Long id) {
         EntityManager em = factory.createEntityManager();
-        em.getTransaction().begin();
-        Product product = em.find(Product.class, id);
-        em.getTransaction().commit();
-        em.close();
-        return product;
+        try {
+            Product product = em.find(Product.class, id);
+            return Optional.ofNullable(product);
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
 
     public List<Product> findAll() {
         EntityManager em = factory.createEntityManager();
-        em.getTransaction().begin();
-        List<Product> products = em.createQuery("SELECT p FROM Product p").getResultList();
-        em.getTransaction().commit();
-        em.close();
-        return products;
+        try {
+            List<Product> products = em.createQuery("SELECT p FROM Product p").getResultList();
+            return products;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
 
     public void deleteById(Long id) throws IllegalArgumentException {
         EntityManager em = factory.createEntityManager();
-        em.getTransaction().begin();
         try {
+            em.getTransaction().begin();
             Product product = em.find(Product.class, id);
             em.remove(product);
+            em.getTransaction().commit();
         } catch (IllegalArgumentException e) {
             System.out.println("Данного элемента не существует.");
+        } finally {
+            if (em != null) {
+                em.close();
+            }
         }
-        em.getTransaction().commit();
-        em.close();
     }
 
     public void saveOrUpdate(Product product) {
         EntityManager em = factory.createEntityManager();
-        em.getTransaction().begin();
-        em.merge(product);
-        em.getTransaction().commit();
-        em.close();
+        try {
+            em.getTransaction().begin();
+            em.merge(product);
+            em.getTransaction().commit();
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
 }
